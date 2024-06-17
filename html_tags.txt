@@ -1,0 +1,5 @@
+-   LINKEDIN
+
+jobs-search-results-list
+scaffold-layout__list-container
+ember-view   jobs-search-results__list-item occludable-update p0 relative scaffold-layout__list-item
