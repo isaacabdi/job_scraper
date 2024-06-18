@@ -1,0 +1,45 @@
+
+{
+    "queries": [
+        "student",
+        "intern",
+        "co-op"
+    ],
+    "locations": [
+        "Whitby, ON",
+        "Waterloo, ON",
+        "Markham, ON"
+    ],
+    "includes": [
+        "software engineering",
+        "software engineer",
+        "software",
+        "technology",
+        "computer",
+        "systems",
+        "full stack",
+        "full-stack",
+        "backend",
+        "frontend",
+        "qa",
+        "automation",
+        "data",
+        "developer",
+        "mobile",
+        "web",
+        "it",
+        "quality assurance",
+        "devops",
+        "dev ops"
+    ],
+    "must_include": [
+        "intern",
+        "co-op",
+        "student",
+        "coop"
+    ],
+    "excludes": [
+
+    ],
+    "distance": 25
+}
