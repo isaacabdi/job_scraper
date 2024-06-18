@@ -21,17 +21,16 @@ def load_config():
     return queries, locations, include, must_include, exclude, distance
 
 def get_titles(soup, includes, must_include, excludes):
-
-    titles_filtered = []
+    filtered_titles = []
     titles = soup.find_all("span", {"class": "sr-only"})
     for title in titles:
-        if (
-            any(include in title.get_text().strip().lower() for include in includes)
-            and any(must in title.get_text().strip().lower() for must in must_include)  
-            and not any(exclude in title.get_text().strip().lower() for exclude in excludes)
-        ):
-            titles_filtered.append(title)
-    return titles_filtered
+        title_text = title.get_text().strip().lower()
+        includes_matches = [include for include in includes if include in title_text]
+        must_include_matches = [must for must in must_include if must in title_text]
+        excludes_matches = [exclude for exclude in excludes if exclude in title_text]
+        if len(includes_matches) > 0 and len(must_include_matches) > 0 and len(excludes_matches) == 0:
+            filtered_titles.append(title)
+    return filtered_titles
 
 def get_links(titles):
 
