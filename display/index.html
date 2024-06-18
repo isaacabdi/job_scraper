@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <div id="jobs-container">
+            <h1>Jobs</h1>
+        </div>
+        <script>
+            fetch('../jobs.json')
+                .then(response => response.json())
+                .then(data => {
+                    const jobsContainer = document.getElementById('jobs-container');
+                    for (const [title, jobDetails] of Object.entries(data.jobs)){
+                        const jobDiv = document.createElement('div');
+                        const link = document.createElement('a');
+                        const location = document.createElement('h3');
+
+                        jobDiv.className = "jobDiv";
+                        link.href = jobDetails.link;
+                        link.textContent = title;
+                        location.innerText = jobDetails.location;
+
+                        jobDiv.appendChild(link);
+                        jobDiv.appendChild(location);
+                        jobsContainer.appendChild(jobDiv);
+                    }
+                    console.log(data["jobs"]);
+                })
+                .catch(error => {
+                    console.error('Error loading jobs:', error);
+                });
+        </script>
+    </body>
+</html>
