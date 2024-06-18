@@ -41,5 +41,6 @@
     "excludes": [
 
     ],
+    "age_limit": 7,
     "distance": 25
 }

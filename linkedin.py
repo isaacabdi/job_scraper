@@ -15,22 +15,23 @@ def load_config():
         include = config["includes"]
         must_include = config["must_include"]
         exclude = config["excludes"]
+        age_limit = config["age_limit"]
         distance = config["distance"]
         
 
-    return queries, locations, include, must_include, exclude, distance
+    return queries, locations, include, must_include, exclude, age_limit, distance
 
 def get_titles(soup, includes, must_include, excludes):
-    filtered_titles = []
+    titles_list = []
     titles = soup.find_all("span", {"class": "sr-only"})
-    for title in titles:
-        title_text = title.get_text().strip().lower()
-        includes_matches = [include for include in includes if include in title_text]
-        must_include_matches = [must for must in must_include if must in title_text]
-        excludes_matches = [exclude for exclude in excludes if exclude in title_text]
+    for t in titles:
+        t_text = t.get_text().strip().lower()
+        includes_matches = [include for include in includes if include in t_text]
+        must_include_matches = [must for must in must_include if must in t_text]
+        excludes_matches = [exclude for exclude in excludes if exclude in t_text]
         if len(includes_matches) > 0 and len(must_include_matches) > 0 and len(excludes_matches) == 0:
-            filtered_titles.append(title)
-    return filtered_titles
+            titles_list.append(t)
+    return titles_list
 
 def get_links(titles):
 
@@ -49,7 +50,18 @@ def get_locations(titles):
         location_list.append(location.get_text().strip())
     return location_list
 
+def get_dates(titles):
+    date_list = []
+    for title in titles:
+        try:
+            date = title.parent.parent.find(class_='job-search-card__listdate')
+            date_list.append(date['datetime'])
+        except Exception as e:
+            today = datetime.today().strftime('%Y-%m-%d')
+            print(f'Error adding date: {e}')
+            date_list.append(today) # default to today's date 
 
+    return date_list
 
 def count_jobs(jobs):
 
@@ -63,7 +75,7 @@ def scrape_linkedin():
     Scrape job postings from LinkedIn based on the configuration parameters.
     Updates 'jobs.json' with new job postings.
     """
-    queries, locations, include, must_include, exclude, distance = load_config()
+    queries, locations, include, must_include, exclude, age_limit, distance = load_config()
 
     # Load old jobs
     with open('jobs.json', 'r') as job_json:
@@ -81,18 +93,21 @@ def scrape_linkedin():
                 title_list = get_titles(soup, include, must_include, exclude)
                 link_list = get_links(title_list)
                 locations = get_locations(title_list)
-
+                dates = get_dates(title_list)
                 page += 25
 
                 for i in range(len(title_list)):
                     new_job = {
                         title_list[i].get_text().strip(): {
                             "link": link_list[i],
-                            "location": locations[i]
+                            "location": locations[i],
+                            "date": dates[i],
                         }
                     }
-                    jobs['jobs'].update(new_job) 
-                    print(f'{title_list[i].get_text().strip()} (LinkedIn)')
+                    if new_job[title_list[i].get_text().strip()]["date"] != 'failed to fetch date':
+                        if (datetime.today() - datetime.strptime((new_job[title_list[i].get_text().strip()])["date"], '%Y-%m-%d')).days < age_limit: 
+                            jobs['jobs'].update(new_job) 
+                            print(f'{title_list[i].get_text().strip()} (LinkedIn)')
  
                 
                 # Fetch next page of job postings
