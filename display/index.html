@@ -18,14 +18,17 @@
                         const jobDiv = document.createElement('div');
                         const link = document.createElement('a');
                         const location = document.createElement('h3');
+                        const date = document.createElement('h3');
 
                         jobDiv.className = "jobDiv";
                         link.href = jobDetails.link;
                         link.textContent = title;
                         location.innerText = jobDetails.location;
+                        date.innerText = jobDetails.date;
 
                         jobDiv.appendChild(link);
                         jobDiv.appendChild(location);
+                        jobDiv.appendChild(date);
                         jobsContainer.appendChild(jobDiv);
                     }
                     console.log(data["jobs"]);

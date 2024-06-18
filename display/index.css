@@ -2,3 +2,40 @@ h1 {
     text-align: center;
     color: #252525;
 }
+h3 {
+    margin: 5px 0;
+    color: #555;
+}
+a {
+    font-size: x-large;
+    color: #0073e6;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+a:visited {
+    color: rgb(60, 12, 99);
+}  
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+#jobs-container {
+    width: 80%;
+    margin: 50px auto;
+    background: #fff;
+    padding: 60px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.jobDiv {
+    border-bottom: 1px solid #ddd;
+    padding: 30px;
+    margin: 15px;
+}
+.jobDiv:last-child {
+    border-bottom: none;
+}
+

@@ -6,9 +6,7 @@
         "co-op"
     ],
     "locations": [
-        "Whitby, ON",
-        "Waterloo, ON",
-        "Markham, ON"
+        "Ontario"
     ],
     "includes": [
         "software engineering",
@@ -41,6 +39,6 @@
     "excludes": [
 
     ],
-    "age_limit": 7,
+    "age_limit": 20,
     "distance": 25
 }
