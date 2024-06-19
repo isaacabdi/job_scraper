@@ -5,6 +5,7 @@ import json
 
 
 scrape_linkedin()
+
 '''
 if __name__ == "__main__":
     test_beautifulsoup() 

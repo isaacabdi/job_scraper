@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup 
-from datetime import datetime
+from datetime import datetime, timedelta
+from selenium import webdriver
 import requests
 import json
 import cloudscraper
@@ -19,7 +20,7 @@ def load_config():
 
 def get_titles(soup, includes, must_include, excludes):
     titles_list = []
-    titles = soup.find_all("span", {"class": "sr-only"})
+    titles = soup.select('span[title]')
     for t in titles:
         if (any(include in t.get_text().strip().lower() for include in includes) 
             and any(must in t.get_text().strip().lower() for must in must_include) 
@@ -32,25 +33,29 @@ def get_links(titles):
     for title in titles:
         if title.parent.has_attr('href'):
             link = title.parent['href']
-            link_list.append(link)
+            link_list.append(f'https://ca.indeed.com{link}')
     return link_list
 
 def get_locations(titles):
     location_list = []
     for title in titles:
-        location = title.parent.parent.find(class_='job-search-card__location')
-        location_list.append(location.get_text().strip())
+        parent = title.find_parent('td', {'class': 'resultContent css-1qwrrf0 eu4oa1w0'})
+        location = parent.find('div', {'class': 'css-1p0sjhy eu4oa1w0'}).text
+        location_list.append(location)
     return location_list
 
 def get_dates(titles):
     date_list = []
+    date_format = '%Y-%m-%d'
     for title in titles:
-        try:
-            date = title.parent.parent.find(class_='job-search-card__listdate')
-            date_list.append(date['datetime'])
-        except Exception as e:
-            print(f'Error adding date: {e}')
-            date_list.append('failed to fetch date')
+        parent = title.find_parent('div', {'class': 'job_seen_beacon'})
+        date_info = parent.find('span', {'class': 'css-qvloho eu4oa1w0'}).text.replace('+', '')
+        days_ago = [int(s) for s in date_info.split() if s.isdigit()]
+        if len(days_ago) > 0:
+            today = datetime.today()
+            date_t = timedelta(days=days_ago[0])
+            final_date = (today - date_t).strftime(date_format)
+            date_list.append(final_date)
 
     return date_list
 
@@ -104,15 +109,9 @@ def scrape_indeed():
                         if (datetime.today() - datetime.strptime((new_job[title_list[i].get_text().strip()])["date"], '%Y-%m-%d')).days < age_limit: 
                             jobs['jobs'].update(new_job) 
 
-                html = requests.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}&start={page}')
+                html = requests.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}')
                 soup = BeautifulSoup(html.text, 'html.parser')
 
     # write new job
     with open('jobs.json', 'w') as job_json:
         json.dump(jobs, job_json, indent=4)
-
-def test_scraper():
-    scraper = cloudscraper.create_scraper()  
-    html = scraper.get("https://ca.indeed.com/jobs?q=intern&l=Toronto, ON&radius=15")
-    soup = BeautifulSoup(html.text, 'html.parser')
-    print(soup.find_all('span', id = "jobTitle-6366d8cf6b4c1110"))
