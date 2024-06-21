@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup 
 from datetime import datetime, timedelta
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 import requests
 import json
 import cloudscraper
@@ -58,6 +60,11 @@ def get_dates(titles):
             date_list.append(final_date)
 
     return date_list
+def count_jobs(jobs):
+    count = 0
+    for title, details in jobs['jobs'].items():
+        count += 1
+    return count
 
 def clear_old_jobs(jobs, age_limit):
     jobs_to_delete = []
@@ -76,19 +83,25 @@ def clear_old_jobs(jobs, age_limit):
 
 def scrape_indeed():
     queries, locations, include, must_include, exclude, age_limit, distance = load_config()
-
+    options = Options()         
+    options.headless = True 
+    driver = webdriver.Firefox(options=options)
     # load old jobs
     with open('jobs.json', 'r') as job_json:
         jobs = json.load(job_json)
 
     jobs = clear_old_jobs(jobs, age_limit)
+    old_count = count_jobs(jobs)
 
     for query in queries:
         for location in locations:
             page = 0
-            html = requests.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}')
-            soup = BeautifulSoup(html.text, 'html.parser')
-            while len(soup.find_all('li')) > 0:
+            driver.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}&start={page}')
+            driver.implicitly_wait(3)
+            html = driver.page_source
+            soup = BeautifulSoup(html, 'html.parser')
+
+            while True:
                 title_list = get_titles(soup, include, must_include, exclude)
                 link_list = get_links(title_list)
                 locations = get_locations(title_list)
@@ -96,7 +109,6 @@ def scrape_indeed():
                 page += 10
 
                 for i in range(len(title_list)):
-                    print(title_list[i].get_text().strip())
                     new_job = {
                         title_list[i].get_text().strip(): {
                             "link": link_list[i],
@@ -108,10 +120,19 @@ def scrape_indeed():
                     if new_job[title_list[i].get_text().strip()]["date"] != 'failed to fetch date':
                         if (datetime.today() - datetime.strptime((new_job[title_list[i].get_text().strip()])["date"], '%Y-%m-%d')).days < age_limit: 
                             jobs['jobs'].update(new_job) 
+                            print(title_list[i].get_text().strip())
+                                # if no next page
+                if not driver.find_elements(By.XPATH, '/html/body/main/div/div[2]/div/div[5]/div/div[1]/nav/ul/li[6]/a'):
+                    break
 
-                html = requests.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}')
-                soup = BeautifulSoup(html.text, 'html.parser')
-
+                driver.get(f'https://ca.indeed.com/jobs?q={query}&l={location}&radius={distance}&start={page}')
+                driver.implicitly_wait(3)
+                html = driver.page_source
+                soup = BeautifulSoup(html, 'html.parser')
+    driver.quit()
     # write new job
     with open('jobs.json', 'w') as job_json:
         json.dump(jobs, job_json, indent=4)
+        
+    new_count = count_jobs(jobs)
+    print(f'Found {abs(old_count - new_count)} new jobs on Indeed')
