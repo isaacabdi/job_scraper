@@ -24,9 +24,11 @@ def get_titles(soup, includes, must_include, excludes):
     titles_list = []
     titles = soup.select('span[title]')
     for t in titles:
-        if (any(include in t.get_text().strip().lower() for include in includes) 
-            and any(must in t.get_text().strip().lower() for must in must_include) 
-            and not any(exclude in t.get_text().strip().lower() for exclude in excludes)):
+        title_text = t.get_text().strip().lower()
+        includes_matches = [include for include in includes if include in title_text]
+        must_include_matches = [must for must in must_include if must in title_text]
+        excludes_matches = [exclude for exclude in excludes if exclude in title_text]
+        if len(includes_matches) > 0 and len(must_include_matches) > 0 and len(excludes_matches) == 0:
             titles_list.append(t)
     return titles_list
 
@@ -50,14 +52,18 @@ def get_dates(titles):
     date_list = []
     date_format = '%Y-%m-%d'
     for title in titles:
+        today = datetime.today()
         parent = title.find_parent('div', {'class': 'job_seen_beacon'})
         date_info = parent.find('span', {'class': 'css-qvloho eu4oa1w0'}).text.replace('+', '')
         days_ago = [int(s) for s in date_info.split() if s.isdigit()]
         if len(days_ago) > 0:
-            today = datetime.today()
             date_t = timedelta(days=days_ago[0])
             final_date = (today - date_t).strftime(date_format)
-            date_list.append(final_date)
+        else: 
+            print(f"failed to get date for {title.get_text().strip()}: defaulting to today's date")
+            final_date = today.strftime(date_format) 
+
+        date_list.append(final_date)
 
     return date_list
 def count_jobs(jobs):
@@ -120,8 +126,8 @@ def scrape_indeed():
                     if new_job[title_list[i].get_text().strip()]["date"] != 'failed to fetch date':
                         if (datetime.today() - datetime.strptime((new_job[title_list[i].get_text().strip()])["date"], '%Y-%m-%d')).days < age_limit: 
                             jobs['jobs'].update(new_job) 
-                            print(title_list[i].get_text().strip())
-                                # if no next page
+                            print(f'{title_list[i].get_text().strip()} (Indeed)')
+                                # if next page dont exist
                 if not driver.find_elements(By.XPATH, '/html/body/main/div/div[2]/div/div[5]/div/div[1]/nav/ul/li[6]/a'):
                     break
 
@@ -133,6 +139,6 @@ def scrape_indeed():
     # write new job
     with open('jobs.json', 'w') as job_json:
         json.dump(jobs, job_json, indent=4)
-        
+
     new_count = count_jobs(jobs)
     print(f'Found {abs(old_count - new_count)} new jobs on Indeed')
