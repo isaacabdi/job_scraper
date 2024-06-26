@@ -3,7 +3,7 @@ import requirements.txt and run using jos.bat file and viewing on index.html or 
 
 Change config file parameters to alter your search
 
-queries: what you want to search
+queries: what you want to search, locates keywords from job description
 
         locations: where you want to search
         
