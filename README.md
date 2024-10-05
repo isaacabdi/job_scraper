@@ -1,5 +1,6 @@
 job scraper test
-import requirements.txt and run using jos.bat file and viewing on index.html or local server
+
+import requirements.txt and run using jobs.bat file and viewing on index.html or local server
 
 Change config file parameters to alter your search
 
