@@ -1,10 +1,8 @@
-job scraper test
-
-import requirements.txt and run using jobs.bat file and viewing on index.html or local server
+import requirements.txt and run using jobs.bat file 
 
 Change config file parameters to alter your search
 
-queries: what you want to search, locates keywords from job description
+Queries: what you want to search, locates keywords from job description
 
         locations: where you want to search
         
